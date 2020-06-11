@@ -27,14 +27,7 @@ public class MainActivity extends AppCompatActivity {
     LocationListener locationListener;
     TextView contentTextView;
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startListening();
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,35 +57,47 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},1);
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION},1);
         } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,25,locationListener);
-            Location lastKnownLocation = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,locationListener);
+            Location lastKnownLocation = locationManager.getLastKnownLocation(locationManager.NETWORK_PROVIDER);
             if (lastKnownLocation != null){
                 updateLocationInfo(lastKnownLocation);
             }
         }
     }
 
-    public void startListening (){
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,25,locationListener);
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startListening();
         }
     }
 
+    public void startListening (){
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,locationListener);
+        }
+    }
+
+
     public void updateLocationInfo (Location location){
+        contentTextView = findViewById(R.id.contentTextView);
         Geocoder geocoder =  new Geocoder(getApplicationContext(), Locale.getDefault());
         try {
             List<Address> addressList = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-            if (addressList.get(0) != null && addressList.size() > 0) {
+            if (addressList != null && addressList.size() > 0) {
 
                 String address = "";
 
-                address += "Latitude: " + addressList.get(0).getLatitude() + "\r\n" + "\r\n";
-                address += "Longitude: " + addressList.get(0).getLongitude() + "\r\n" + "\r\n";
+                address += "Latitude: " + Double.toString(addressList.get(0).getLatitude())+ "\r\n" + "\r\n";
+                address += "Longitude: " + Double.toString(addressList.get(0).getLongitude()) + "\r\n" + "\r\n";
                 address += "Accuracy: " + String.valueOf(location.getAccuracy())+ "\r\n" + "\r\n";
-                address += "Latitude: " + String.valueOf(location.getAltitude()) + "\r\n" + "\r\n";
+                address += "Altitude: " + String.valueOf(location.getAltitude()) + "\r\n" + "\r\n";
                 address += "Address: ";
 
                 String addressName = "";
@@ -119,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                     addressName = "Location not found!";
                 }
                 address += addressName;
-                contentTextView = findViewById(R.id.contentTextView);
+
                 contentTextView.setText(address);
 
             }
